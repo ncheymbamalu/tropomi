@@ -122,12 +122,20 @@ def netcdf_files_to_geodataframe(netcdf_files_path, usa_shapefile_path, export_f
         daily_geodataframes.append(gdf_states)
 
     # Vertically stack all the GeoDataFrames in the 'daily_geodataframes' list to create a final DataFrame
-    gdf = pd.concat(daily_geodataframes, axis=0)
-    gdf.rename({'name': 'state'}, axis=1, inplace=True)
-    gdf.sort_values(['day', 'time_utc'], inplace=True)
+    gdf_final = pd.concat(daily_geodataframes, axis=0)
+    gdf_final.rename({'name': 'state'}, axis=1, inplace=True)
+    gdf_final.sort_values(['day', 'time_utc'], inplace=True)
     df_final = gdf.drop('geometry', axis=1).copy(deep=True)
 
-    # Export the 'df_final' DataFrame as a csv file and return the 'gdf' GeoDataFrame
+    # Export the 'df_final' DataFrame as a csv file and return the 'gdf_final' GeoDataFrame
     file_name = '/TROPOMI_L2_CH4_USA_' + df_final.iloc[0]['day'].split(' ')[0] + '_' + df_final.iloc[0]['day'].split(' ')[-1] + '.csv'
     df_final.to_csv(export_file_path + file_name)
-    return gdf
+    return gdf_final
+
+
+# Update the 'netcdf_files_path', 'usa_shapefile_path', and 'export_file_path' variables
+netcdf_files_path = ''
+usa_shapefile_path = ''
+export_file_path = ''
+gdf = netcdf_files_to_geodataframe(netcdf_files_path, usa_shapefile_path, export_file_path)
+print(gdf.head())
