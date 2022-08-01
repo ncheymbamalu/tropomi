@@ -53,12 +53,12 @@ def update_graph(date):
     df_analysis = pd.DataFrame(
         np.round(df_abnormal_methane.groupby('state')['ppm'].sum() / df_abnormal_methane['ppm'].sum(),
                  6) * 100).reset_index().sort_values('ppm')
-    df_analysis.columns = ['State', '% Abnormal Methane Concentrations']
+    df_analysis.columns = ['State', 'Abnormal Methane Concentrations Percentage']
 
     # instantiate a 'make_subplots()' object, specify its input parameters, and assign it to the variable 'fig'
     fig = make_subplots(rows=1, cols=2, specs=[[dict(type='mapbox'), dict(type='bar')]],
                         subplot_titles=('Atmospheric Methane Concentrations, Mainland USA',
-                                        '% of Abnormal Methane Concentrations Per State'),
+                                        'Percentage of Abnormal Methane per State'),
                         column_widths=[0.7, 0.3], horizontal_spacing=0.15)
 
     # interactive map of the mainland USA's daily atmospheric methane concentrations
@@ -84,8 +84,8 @@ def update_graph(date):
                   row=1, col=1)
 
     # interactive horizontal bar chart showing the percentage of 'abnormal' methane concentrations per state
-    fig.add_trace(go.Bar(name='Bar chart', x=df_analysis['% Abnormal Methane Concentrations'], y=df_analysis['State'],
-                         marker=go.bar.Marker(color='red'), hoverinfo='text',
+    fig.add_trace(go.Bar(name='Bar chart', x=df_analysis['Abnormal Methane Concentrations Percentage'],
+                         y=df_analysis['State'], marker=go.bar.Marker(color='red'), hoverinfo='text',
                          hovertemplate='<extra></extra><b>% of Abnormal Methane</b>: %{x}', orientation='h'),
                   row=1, col=2)
 
