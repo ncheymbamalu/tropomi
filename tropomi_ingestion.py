@@ -11,7 +11,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-# Write a function that reads in list of NetCDF files, processes them, and exports them a single DataFrame
+# Write a function that reads in list of NetCDF files, processes them, and exports them as a single DataFrame
 def ingest_process_export(netcdf_files_directory, usa_shapefile, export_directory):
     # Read in a list of NetCDF files
     netcdf_files = sorted(glob.glob(netcdf_files_directory + '*.nc'))
