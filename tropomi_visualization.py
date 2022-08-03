@@ -1,21 +1,19 @@
+# import the necessary dependencies
+import warnings
+
+import dash
 import numpy as np
 import pandas as pd
-
-# plotly
 import plotly.graph_objs as go
+from dash import dcc, html, Input, Output
 from plotly.subplots import make_subplots
-
-# dash
-import dash
-from dash import Dash, dcc, html, Input, Output
-
-import warnings
 
 warnings.filterwarnings("ignore")
 
-# update the 'tropomi_methane_csv' variable and read in the data as a DataFrame
-tropomi_methane_csv = ''
-df = pd.read_csv(tropomi_methane_csv, index_col='time_utc', parse_dates=True)
+
+# update the 'tropomi_methane' variable with a csv file and read in the data as a DataFrame
+tropomi_methane = ''
+df = pd.read_csv(tropomi_methane, index_col='time_utc', parse_dates=True)
 df.index = df.index.time
 
 days = list(df['day'].sort_values().unique())
