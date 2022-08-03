@@ -24,25 +24,25 @@ threshold = df['ppm'].mean() + (2 * df['ppm'].std())
 # dashboard application
 app = dash.Dash()
 
-# application layout (Dash components)
-# see w3schools.com/css/ for tidbits on HTML styling
+# dashboard layout (Dash components: dropdown menu and visualizations)
 app.layout = html.Div([
 
+    # header
     html.H1('TROPOMI Methane Analysis, Mainland USA', style={'text-align': 'center'}),
 
-    # dropdown menu
+    # input Dash component: dropdown menu
     dcc.Dropdown(id='dropdown_menu',
                  options=days,
                  placeholder='Select a day',
                  style={'width': '40%'}
                  ),
 
-    # 'fig' visualizations (see the 'update_graph' function below)
+    # output Dash component: visualizations (see the 'update_graph' function below)
     dcc.Graph(id='visualizations', figure={})
 ])
 
 
-# connect the Plotly visualizations with the Dash components
+# connect each Dash component's id with its corresponding property
 @app.callback(
     Output(component_id='visualizations', component_property='figure'),
     Input(component_id='dropdown_menu', component_property='value')
@@ -53,12 +53,12 @@ def update_graph(date):
     df_analysis = pd.DataFrame(
         np.round(df_abnormal_methane.groupby('state')['ppm'].sum() / df_abnormal_methane['ppm'].sum(),
                  6) * 100).reset_index().sort_values('ppm')
-    df_analysis.columns = ['State', 'Abnormal Methane Concentrations Percentage']
+    df_analysis.columns = ['state', 'abnormal_methane_percentage']
 
-    # instantiate a 'make_subplots()' object, specify its input parameters, and assign it to the variable 'fig'
+    # instantiate a Plotly 'make_subplots()' object, specify its input parameters, and assign it to the variable 'fig'
     fig = make_subplots(rows=1, cols=2, specs=[[dict(type='mapbox'), dict(type='bar')]],
                         subplot_titles=('Atmospheric Methane Concentrations, Mainland USA',
-                                        'Percentage of Abnormal Methane per State'),
+                                        'Percentage of Abnormal Methane Concentrations per State'),
                         column_widths=[0.7, 0.3], horizontal_spacing=0.15)
 
     # interactive map of the mainland USA's daily atmospheric methane concentrations
@@ -84,8 +84,8 @@ def update_graph(date):
                   row=1, col=1)
 
     # interactive horizontal bar chart showing the percentage of 'abnormal' methane concentrations per state
-    fig.add_trace(go.Bar(name='Bar chart', x=df_analysis['Abnormal Methane Concentrations Percentage'],
-                         y=df_analysis['State'], marker=go.bar.Marker(color='red'), hoverinfo='text',
+    fig.add_trace(go.Bar(name='Bar chart', x=df_analysis['abnormal_methane_percentage'], y=df_analysis['state'],
+                         marker=go.bar.Marker(color='red'), hoverinfo='text',
                          hovertemplate='<extra></extra><b>% of Abnormal Methane</b>: %{x}', orientation='h'),
                   row=1, col=2)
 
