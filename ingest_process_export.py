@@ -11,7 +11,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-# Write a function that reads in list of NetCDF files, processes them, and exports them as a single DataFrame
+# Write a function that reads in list of NetCDF files, processes, merges, and exports them as a single file
 def ingest_process_export(netcdf_files_directory, usa_shapefile, export_directory):
     # Read in a list of NetCDF files
     netcdf_files = sorted(glob.glob(netcdf_files_directory + '*.nc'))
@@ -55,8 +55,8 @@ def ingest_process_export(netcdf_files_directory, usa_shapefile, export_director
         fill_value = product_data[product_vars[1]]._FillValue
         df_temp[product_vars[1]] = df_temp[product_vars[1]].apply(lambda x: np.nan if x == fill_value else x)
         df_temp.dropna(subset=[product_vars[1]], inplace=True)
-        df_temp = df_temp[df_temp[product_vars[2]] > 0.5].copy(deep=True)
-        df_temp.drop(product_vars[2], axis=1, inplace=True)
+        # df_temp = df_temp[df_temp[product_vars[2]] > 0.5].copy(deep=True) # keep 'qa_value' feature
+        # df_temp.drop(product_vars[2], axis=1, inplace=True) # keep 'qa_value' feature
         df_temp['count'] = df_temp.shape[0]
 
         # Add the 'df_temp' DataFrame to the 'processed_dataframes' list
@@ -70,7 +70,8 @@ def ingest_process_export(netcdf_files_directory, usa_shapefile, export_director
     df['day'] = df['day'].dt.strftime('%b %d, %Y')
     df.index = df.index.time
     df.index.rename('time_utc', inplace=True)
-    df = df.iloc[:, [-1, -2, 0, 1, 2, 3, 4]].copy(deep=True)
+    df = df[['day', 'count', 'ppm', 'qa_value', 'longitude',
+             'latitude', 'eastward_wind', 'northward_wind']].copy(deep=True)
 
     # Read in the USA shapefile as a GeoDataFrame
     gdf_usa = gpd.read_file(usa_shapefile)
@@ -97,8 +98,8 @@ def ingest_process_export(netcdf_files_directory, usa_shapefile, export_director
     # Convert the 'df' DataFrame to a USA-mainland filtered DataFrame whose dates are in ascending order
     days = list(df['day'].sort_values().unique())
     states = list(gdf_usa48['name'].sort_values().unique())
-    features = ['day', 'bin_number', 'name', 'stusps', 'division', 'region', 'ppm', 'longitude', 'latitude',
-                'eastward_wind', 'northward_wind', 'geometry']
+    features = ['day', 'bin_number', 'name', 'stusps', 'division', 'region', 'ppm', 'qa_value',
+                'longitude', 'latitude', 'eastward_wind', 'northward_wind', 'geometry']
     daily_geodataframes = []
     for day in days:
         df_day = df[df['day'] == day].copy(deep=True)
@@ -109,8 +110,8 @@ def ingest_process_export(netcdf_files_directory, usa_shapefile, export_director
         gdf_day = df_day.copy(deep=True)
         gdf_day = GeoDataFrame(gdf_day, geometry=points_from_xy(gdf_day['longitude'], gdf_day['latitude']))
         gdf_day = sjoin(gdf_day, gdf_usa48, how='inner')
-        gdf_day = gdf_day[['day', 'bin_number', 'ppm', 'longitude', 'latitude', 'eastward_wind', 'northward_wind',
-                           'geometry']].copy(deep=True)
+        gdf_day = gdf_day[['day', 'bin_number', 'ppm', 'qa_value', 'longitude', 'latitude',
+                           'eastward_wind', 'northward_wind', 'geometry']].copy(deep=True)
         state_geodataframes = []
         for state in states:
             state_shapefile = gdf_usa48[gdf_usa48['name'] == state].copy(deep=True)
@@ -127,12 +128,16 @@ def ingest_process_export(netcdf_files_directory, usa_shapefile, export_director
     df_final = gdf_final.drop('geometry', axis=1).copy(deep=True)
 
     # Export the 'df_final' DataFrame as a csv file
-    file_name = 'TROPOMI_L2_CH4_USA_' + df_final['day'][0].split(' ')[0] + '_' + df_final['day'][0].split(' ')[-1] + '.csv'
-    df_final.to_csv(export_directory + file_name)
+    # csv_file = f"TROPOMI_L2_CH4_USA_{df_final['day'][0].split(' ')[0]}_{df_final['day'][0].split(' ')[-1]}.csv"
+    # df_final.to_csv(export_directory + csv_file)
+
+    # Export the 'df_final' DataFrame as a parquet file
+    parquet_file = f"TROPOMI_L2_CH4_USA_{df_final['day'][0].split(' ')[0]}_{df_final['day'][0].split(' ')[-1]}.parquet"
+    df_final.to_parquet(export_directory + parquet_file)
 
 
-# Update the 'a', 'b', and 'c' variables
-a = ''
-b = ''
-c = ''
+# Update the 'a', 'b', and 'c' variables, and call the 'ingest_process_export' function
+a = r""
+b = r""
+c = r""
 ingest_process_export(netcdf_files_directory=a, usa_shapefile=b, export_directory=c)
